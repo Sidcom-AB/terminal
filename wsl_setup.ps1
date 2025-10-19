@@ -116,7 +116,8 @@ $profile = [pscustomobject]@{
   useAcrylic = $false
 }
 
-$idx = ($json.profiles.list | ForEach-Object { $_.guid }) -indexOf $ProfileGuid
+$existingGuids = @($json.profiles.list | ForEach-Object { $_.guid })
+$idx = [array]::IndexOf($existingGuids, $ProfileGuid)
 if ($idx -ge 0) { $json.profiles.list[$idx] = $profile } else { $json.profiles.list += $profile }
 $json.defaultProfile = $ProfileGuid
 
