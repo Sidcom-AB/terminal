@@ -11,7 +11,7 @@ $CursorShape    = "filledBox"
 $DistroName     = "Debian"
 
 # Raw-bas för detta repo
-$RepoRawBase    = "https://raw.githubusercontent.com/Sidcom-AB/terminal/main"
+$RepoRawBase    = "https://raw.githubusercontent.com/Sidcom-AB/terminal/master"
 
 # Asset-filer i repo (Windows Terminal)
 $BgFile   = "background.png"

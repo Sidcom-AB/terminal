@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ================== CONFIG ==================
-REPO_RAW_BASE="https://raw.githubusercontent.com/Sidcom-AB/terminal/main"
+REPO_RAW_BASE="https://raw.githubusercontent.com/Sidcom-AB/terminal/master"
 LIVE_PROFILE_URL="$REPO_RAW_BASE/dotfiles/profile.sh"
 LIVE_LOGO_URL="$REPO_RAW_BASE/dotfiles/logo.txt"
 
