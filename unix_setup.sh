@@ -236,4 +236,11 @@ install_deps
 setup_dotstrap
 initial_fetch
 
+echo ""
 echo "  UNIX SETUP COMPLETE"
+echo ""
+
+# Clear screen and reload bashrc for immediate preview
+sleep 1
+clear
+exec bash -l
