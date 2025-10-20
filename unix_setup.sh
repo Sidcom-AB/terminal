@@ -3,6 +3,7 @@
 REPO_RAW_BASE="https://raw.githubusercontent.com/Sidcom-AB/terminal/master"
 LIVE_PROFILE_URL="$REPO_RAW_BASE/dotfiles/profile.sh"
 LIVE_LOGO_URL="$REPO_RAW_BASE/dotfiles/logo.txt"
+LIVE_STARSHIP_URL="$REPO_RAW_BASE/dotfiles/starship.toml"
 
 DOTSTRAP_DIR="$HOME/.cache/dotstrap"
 DOTSTRAP_CONFIG="$HOME/.bashrc.d/99-dotstrap.sh"
@@ -10,6 +11,7 @@ DOTSTRAP_CONFIG="$HOME/.bashrc.d/99-dotstrap.sh"
 # Lokal mode (sätts via environment variable om körs från wsl_setup.ps1)
 LOCAL_PROFILE_PATH="${LOCAL_PROFILE_PATH:-}"
 LOCAL_LOGO_PATH="${LOCAL_LOGO_PATH:-}"
+LOCAL_STARSHIP_PATH="${LOCAL_STARSHIP_PATH:-}"
 # ============================================
 
 set -e
@@ -136,9 +138,11 @@ setup_dotstrap() {
   cat > "$DOTSTRAP_CONFIG" <<'EOF'
 DOTSTRAP_REMOTE_PROFILE="https://raw.githubusercontent.com/Sidcom-AB/terminal/master/dotfiles/profile.sh"
 DOTSTRAP_REMOTE_ASCII="https://raw.githubusercontent.com/Sidcom-AB/terminal/master/dotfiles/logo.txt"
+DOTSTRAP_REMOTE_STARSHIP="https://raw.githubusercontent.com/Sidcom-AB/terminal/master/dotfiles/starship.toml"
 DOTSTRAP_CACHE_DIR="$HOME/.cache/dotstrap"
 DOTSTRAP_CACHE_PROFILE="$DOTSTRAP_CACHE_DIR/profile.sh"
 DOTSTRAP_CACHE_ASCII="$DOTSTRAP_CACHE_DIR/logo.txt"
+DOTSTRAP_CACHE_STARSHIP="$DOTSTRAP_CACHE_DIR/starship.toml"
 DOTSTRAP_TTL_DAYS=1
 
 mkdir -p "$DOTSTRAP_CACHE_DIR"
@@ -152,6 +156,10 @@ __dotstrap_fetch() { curl -fsSL "$1" -o "$2.tmp" && mv "$2.tmp" "$2"; }
 
 __dotstrap_stale "$DOTSTRAP_CACHE_PROFILE" && __dotstrap_fetch "$DOTSTRAP_REMOTE_PROFILE" "$DOTSTRAP_CACHE_PROFILE" || true
 __dotstrap_stale "$DOTSTRAP_CACHE_ASCII"    && __dotstrap_fetch "$DOTSTRAP_REMOTE_ASCII"    "$DOTSTRAP_CACHE_ASCII"    || true
+__dotstrap_stale "$DOTSTRAP_CACHE_STARSHIP" && __dotstrap_fetch "$DOTSTRAP_REMOTE_STARSHIP" "$DOTSTRAP_CACHE_STARSHIP" || true
+
+# Symlink starship config to standard location
+[ -f "$DOTSTRAP_CACHE_STARSHIP" ] && mkdir -p "$HOME/.config" && ln -sf "$DOTSTRAP_CACHE_STARSHIP" "$HOME/.config/starship.toml"
 
 [ -f "$DOTSTRAP_CACHE_PROFILE" ] && . "$DOTSTRAP_CACHE_PROFILE"
 EOF
@@ -188,6 +196,10 @@ initial_fetch() {
       exit 1
     }
 
+    if [ -n "$LOCAL_STARSHIP_PATH" ] && [ -f "$LOCAL_STARSHIP_PATH" ]; then
+      cp "$LOCAL_STARSHIP_PATH" "$DOTSTRAP_DIR/starship.toml" || true
+    fi
+
     echo "        - Local files copied to $DOTSTRAP_DIR"
   else
     echo "        - Downloading from GitHub..."
@@ -202,8 +214,20 @@ initial_fetch() {
       exit 1
     }
 
+    curl -fsSL "$LIVE_STARSHIP_URL" -o "$DOTSTRAP_DIR/starship.toml" || {
+      echo "        - WARNING: Could not download starship.toml (optional)"
+    }
+
     echo "        - Files downloaded to $DOTSTRAP_DIR"
   fi
+
+  # Symlink starship config
+  if [ -f "$DOTSTRAP_DIR/starship.toml" ]; then
+    mkdir -p "$HOME/.config"
+    ln -sf "$DOTSTRAP_DIR/starship.toml" "$HOME/.config/starship.toml"
+    echo "        - Starship config linked to ~/.config/starship.toml"
+  fi
+
   echo ""
 }
 
