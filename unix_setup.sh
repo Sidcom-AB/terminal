@@ -240,7 +240,12 @@ echo ""
 echo "  UNIX SETUP COMPLETE"
 echo ""
 
-# Clear screen and reload bashrc for immediate preview
-sleep 1
-clear
-exec bash -l
+# Only reload shell if run standalone (not from wsl_setup.ps1)
+if [ -z "$LOCAL_PROFILE_PATH" ]; then
+  echo "  Reloading shell..."
+  echo ""
+  exec bash -l
+else
+  echo "  Close this terminal and open a new Windows Terminal tab to see changes!"
+  echo ""
+fi
