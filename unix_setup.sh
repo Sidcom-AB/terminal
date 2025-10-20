@@ -57,26 +57,55 @@ install_deps() {
     debian)
       echo "        - Updating package lists"
       sudo apt-get update -y >/dev/null 2>&1 || true
-      echo "        - Installing curl, git, neofetch"
-      sudo apt-get install -y curl git neofetch >/dev/null 2>&1 || echo "      WARNING: Could not install all packages (requires sudo)"
+      echo "        - Installing curl, git"
+      sudo apt-get install -y curl git >/dev/null 2>&1 || echo "      WARNING: Could not install all packages (requires sudo)"
       echo "        - Installing vivid (optional)"
       sudo apt-get install -y vivid >/dev/null 2>&1 || echo "      NOTE: vivid not available (skipping)"
+
+      # Fastfetch installation
+      if ! command -v fastfetch >/dev/null 2>&1; then
+        echo "        - Installing fastfetch"
+        if sudo apt-get install -y fastfetch >/dev/null 2>&1; then
+          echo "        - Fastfetch installed from apt"
+        else
+          echo "        - Downloading fastfetch from GitHub releases"
+          ARCH=$(uname -m)
+          if [[ "$ARCH" == "x86_64" ]]; then
+            FF_URL="https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-amd64.deb"
+          elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+            FF_URL="https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-linux-aarch64.deb"
+          else
+            echo "      WARNING: Unsupported architecture for fastfetch: $ARCH"
+            FF_URL=""
+          fi
+
+          if [ -n "$FF_URL" ]; then
+            curl -fsSL "$FF_URL" -o /tmp/fastfetch.deb && \
+            sudo dpkg -i /tmp/fastfetch.deb >/dev/null 2>&1 && \
+            rm /tmp/fastfetch.deb && \
+            echo "        - Fastfetch installed from GitHub"
+          fi
+        fi
+      else
+        echo "        - Fastfetch already installed"
+      fi
       ;;
     redhat)
       echo "        - Installing packages (yum)"
-      sudo yum install -y curl git neofetch >/dev/null 2>&1 || echo "      WARNING: Could not install all packages (requires sudo)"
+      sudo yum install -y curl git >/dev/null 2>&1 || echo "      WARNING: Could not install all packages (requires sudo)"
       ;;
     alpine)
       echo "        - Installing packages (apk)"
-      sudo apk add --no-cache bash curl git neofetch >/dev/null 2>&1 || echo "      WARNING: Could not install all packages (requires sudo)"
+      sudo apk add --no-cache bash curl git >/dev/null 2>&1 || echo "      WARNING: Could not install all packages (requires sudo)"
       ;;
     macos)
       if ! command -v brew >/dev/null 2>&1; then
         echo "        - NOTE: Homebrew not found. Install from https://brew.sh"
       else
         echo "        - Installing packages (brew)"
-        brew install curl git neofetch 2>/dev/null || true
+        brew install curl git 2>/dev/null || true
         brew install vivid 2>/dev/null || true
+        brew install fastfetch 2>/dev/null || true
       fi
       ;;
     *)

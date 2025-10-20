@@ -31,9 +31,12 @@ __dotstrap_show_logo() {
   local ascii="${DOTSTRAP_CACHE_ASCII:-$HOME/.cache/dotstrap/logo.txt}"
 
   if command -v fastfetch >/dev/null 2>&1; then
-    # fastfetch: visa logo först, sen systeminfo utan logo
-    [ -f "$ascii" ] && cat "$ascii"
-    fastfetch --logo none
+    # fastfetch: visa logo och systeminfo bredvid varandra
+    if [ -f "$ascii" ]; then
+      fastfetch --logo "$ascii"
+    else
+      fastfetch
+    fi
   elif command -v neofetch >/dev/null 2>&1; then
     # neofetch: visa logo och systeminfo bredvid varandra
     if [ -f "$ascii" ]; then
