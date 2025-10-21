@@ -166,7 +166,11 @@ if ($localUnixSetup -and (Test-Path $localUnixSetup)) {
 }
 
 Write-Progress -Activity "Sidcom Terminal Setup" -Status "Installing bash profile and dependencies in WSL" -PercentComplete 80
-& wsl.exe -d $DistroName -- bash -lc "$wslCmd"
+Write-Host ""
+Write-Host "  Configuring WSL bash environment..." -ForegroundColor Cyan
+Write-Host ""
+& wsl.exe -d $DistroName -- bash -c "$wslCmd"
+Write-Host ""
 
 Write-Progress -Activity "Sidcom Terminal Setup" -Status "Complete" -PercentComplete 100 -Completed
 
