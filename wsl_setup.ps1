@@ -144,15 +144,15 @@ if ($PSScriptRoot) {
   $localUnixSetup = $null
 }
 
+# Konvertera Windows-sökvägar till WSL-sökvägar
+function ConvertTo-WslPath($winPath) {
+  $drive = $winPath.Substring(0,1).ToLower()
+  $path = $winPath.Substring(2) -replace '\\', '/'
+  return "/mnt/$drive$path"
+}
+
 if ($localUnixSetup -and (Test-Path $localUnixSetup)) {
-
-  # Konvertera Windows-sökvägar till WSL-sökvägar
-  function ConvertTo-WslPath($winPath) {
-    $drive = $winPath.Substring(0,1).ToLower()
-    $path = $winPath.Substring(2) -replace '\\', '/'
-    return "/mnt/$drive$path"
-  }
-
+  # Lokala filer finns - använd dem
   $wslUnixSetup = ConvertTo-WslPath $localUnixSetup
   $localProfile = Join-Path $PSScriptRoot "dotfiles\profile.sh"
   $localLogo = Join-Path $PSScriptRoot "dotfiles\logo.txt"
@@ -161,8 +161,22 @@ if ($localUnixSetup -and (Test-Path $localUnixSetup)) {
 
   $wslCmd = "LOCAL_PROFILE_PATH='$wslProfile' LOCAL_LOGO_PATH='$wslLogo' bash '$wslUnixSetup'"
 } else {
+  # Ladda ner unix_setup.sh från GitHub till en temp-plats i WSL och kör den
+  # Detta undviker problemet med att curl kanske inte finns installerat
   $unixSetupUrl = "$RepoRawBase/unix_setup.sh"
-  $wslCmd = "curl -fsSL $unixSetupUrl | bash"
+  $tmpScript = "/tmp/sidcom_unix_setup_$([guid]::NewGuid().ToString('N').Substring(0,8)).sh"
+
+  # Ladda ner via PowerShell och kopiera till WSL
+  $tempWinFile = [System.IO.Path]::GetTempFileName()
+  try {
+    Invoke-WebRequest -UseBasicParsing -Uri $unixSetupUrl -OutFile $tempWinFile -ErrorAction Stop
+    $wslTempPath = ConvertTo-WslPath $tempWinFile
+    $wslCmd = "cp '$wslTempPath' '$tmpScript' && chmod +x '$tmpScript' && bash '$tmpScript' && rm '$tmpScript'"
+  } catch {
+    Write-Host "  ERROR: Could not download unix_setup.sh from GitHub" -ForegroundColor Red
+    Write-Host "  Please check your internet connection" -ForegroundColor Yellow
+    exit 1
+  }
 }
 
 Write-Progress -Activity "Sidcom Terminal Setup" -Status "Installing bash profile and dependencies in WSL" -PercentComplete 80
