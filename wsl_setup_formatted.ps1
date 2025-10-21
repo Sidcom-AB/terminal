@@ -25,13 +25,13 @@ $ProfileGuid    = "{f4302025-1111-4aaa-aaaa-123456789abc}"
 # Kräver admin
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
   Write-Host ""
-  Write-Host "ERROR: This script requires administrator privileges" -ForegroundColor Red
+Write-Host "ERROR: This script requires administrator privileges" -ForegroundColor Red
   Write-Host "Please run PowerShell as Administrator" -ForegroundColor Yellow
-  Write-Host ""
+Write-Host ""
   exit 1
 }
-
 Clear-Host
+
 Write-Host "  TERMINAL SETUP" -ForegroundColor White
 Write-Host "  Windows Terminal + WSL Configuration" -ForegroundColor Gray
 
@@ -60,19 +60,19 @@ $vmFeat = (Get-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatfor
 if ($vmFeat.State -ne "Enabled") {
   Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart -All | Out-Null
 }
-
 $existing = & wsl.exe -l -q 2>$null
 if ($existing -notcontains $DistroName) {
-  Write-Progress -Activity "Sidcom Terminal Setup" -Status "Installing WSL distribution: $DistroName" -PercentComplete 20
+  Write-Progress -Activity "Sidcom Terminal Setup" -Status "Installing WSL distribution: $DistroName" -Percent
+Complete 20
   & wsl.exe --install -d $DistroName
   Write-Host "NOTE: A restart may be required on first installation" -ForegroundColor Yellow
 }
-
 $paths = Get-TerminalPaths
 New-Item -ItemType Directory -Force -Path $paths.Roaming | Out-Null
 
 # Hämta assets till RoamingState (ignorera fel om filen är låst)
-Write-Progress -Activity "Sidcom Terminal Setup" -Status "Downloading assets" -PercentComplete 30
+Write-Progress -Activity "Sidcom Terminal Setup" -Status "Downloading assets" -Percent
+Complete 30
 try { Invoke-WebRequest -UseBasicParsing -Uri "$RepoRawBase/assets/$BgFile"   -OutFile (Join-Path $paths.Roaming $BgFile) -ErrorAction Stop } catch { }
 try { Invoke-WebRequest -UseBasicParsing -Uri "$RepoRawBase/assets/$IconFile" -OutFile (Join-Path $paths.Roaming $IconFile) -ErrorAction Stop } catch { }
 try { Invoke-WebRequest -UseBasicParsing -Uri "$RepoRawBase/assets/$FontFile" -OutFile (Join-Path $paths.Roaming $FontFile) -ErrorAction Stop } catch { }
@@ -81,13 +81,15 @@ try { Invoke-WebRequest -UseBasicParsing -Uri "$RepoRawBase/assets/$FontFile" -O
 Write-Progress -Activity "Sidcom Terminal Setup" -Status "Installing Fira Code font" -PercentComplete 40
 $FontDst = Join-Path $env:WINDIR "Fonts\$FontFile"
 try {
-  Copy-Item (Join-Path $paths.Roaming $FontFile) $FontDst -Force -ErrorAction Stop
+  Copy-Item (Join-Path $paths.Roaming $FontFile)
+$FontDst -Force -ErrorAction Stop
   $fontRegName = "Fira Code (TrueType)"
   New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" -Name $fontRegName -Value $FontFile -PropertyType String -Force -ErrorAction SilentlyContinue | Out-Null
 } catch { }
 
 # Ladda & uppdatera Windows Terminal settings.json
-Write-Progress -Activity "Sidcom Terminal Setup" -Status "Configuring Windows Terminal profile" -PercentComplete 50
+Write-Progress -Activity "Sidcom Terminal Setup" -Status "Configuring Windows Terminal profile" -Percent
+Complete 50
 if (!(Test-Path $paths.Settings)) { throw "Windows Terminal settings not found: $($paths.Settings)" }
 $json = Get-Content $paths.Settings -Raw | ConvertFrom-Json
 
@@ -105,7 +107,6 @@ if (-not $hasNord) {
 
 if (-not $json.profiles) { $json | Add-Member -NotePropertyName profiles -NotePropertyValue ([pscustomobject]@{defaults=@{}; list=@()}) }
 if (-not $json.profiles.list) { $json.profiles.list = @() }
-
 $profile = [pscustomobject]@{
   guid = $ProfileGuid
   name = $TerminalName
@@ -126,7 +127,6 @@ $profile = [pscustomobject]@{
   opacity = 100
   useAcrylic = $false
 }
-
 $existingGuids = @($json.profiles.list | ForEach-Object { $_.guid })
 $idx = [array]::IndexOf($existingGuids, $ProfileGuid)
 if ($idx -ge 0) { $json.profiles.list[$idx] = $profile } else { $json.profiles.list += $profile }
@@ -135,25 +135,20 @@ $json.defaultProfile = $ProfileGuid
 ($json | ConvertTo-Json -Depth 100) | Set-Content -Encoding UTF8 $paths.Settings
 
 # --- WSL inre setup (kör unix_setup.sh) ---
-Write-Progress -Activity "Sidcom Terminal Setup" -Status "Configuring WSL environment" -PercentComplete 70
+Write-Progress -Activity "Sidcom Terminal Setup" -Status "Configuring WSL environment" -Percent
+Complete 70
 
-# Kolla om unix_setup.sh finns lokalt (endast om scriptet körs från en fil)
-if ($PSScriptRoot) {
-  $localUnixSetup = Join-Path $PSScriptRoot "unix_setup.sh"
-} else {
-  $localUnixSetup = $null
-}
-
-if ($localUnixSetup -and (Test-Path $localUnixSetup)) {
+# Kolla om unix_setup.sh finns lokalt
+$localUnixSetup = Join-Path $PSScriptRoot "unix_setup.sh"
+if (Test-Path $localUnixSetup) {
 
   # Konvertera Windows-sökvägar till WSL-sökvägar
   function ConvertTo-WslPath($winPath) {
     $drive = $winPath.Substring(0,1).ToLower()
-    $path = $winPath.Substring(2) -replace '\\', '/'
+$path = $winPath.Substring(2) -replace '\\', '/'
     return "/mnt/$drive$path"
   }
-
-  $wslUnixSetup = ConvertTo-WslPath $localUnixSetup
+$wslUnixSetup = ConvertTo-WslPath $localUnixSetup
   $localProfile = Join-Path $PSScriptRoot "dotfiles\profile.sh"
   $localLogo = Join-Path $PSScriptRoot "dotfiles\logo.txt"
   $wslProfile = ConvertTo-WslPath $localProfile
@@ -165,10 +160,12 @@ if ($localUnixSetup -and (Test-Path $localUnixSetup)) {
   $wslCmd = "curl -fsSL $unixSetupUrl | bash"
 }
 
-Write-Progress -Activity "Sidcom Terminal Setup" -Status "Installing bash profile and dependencies in WSL" -PercentComplete 80
+Write-Progress -Activity "Sidcom Terminal Setup" -Status "Installing bash profile and dependencies in WSL" -Percent
+Complete 80
 & wsl.exe -d $DistroName -- bash -lc "$wslCmd"
 
-Write-Progress -Activity "Sidcom Terminal Setup" -Status "Complete" -PercentComplete 100 -Completed
+Write-Progress -Activity "Sidcom Terminal Setup" -Status "Complete" -PercentComplete 100 -
+Completed
 
 write-host ""
 write-host "  WSL SETUP COMPLETE" -fore Green
