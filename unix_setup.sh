@@ -14,6 +14,39 @@ LOCAL_LOGO_PATH="${LOCAL_LOGO_PATH:-}"
 LOCAL_STARSHIP_PATH="${LOCAL_STARSHIP_PATH:-}"
 # ============================================
 
+# Pre-flight check: Ensure curl is available BEFORE set -e
+if ! command -v curl >/dev/null 2>&1; then
+  echo ""
+  echo "  SIDCOM TERMINAL SETUP"
+  echo "  Installing curl (required dependency)..."
+  echo ""
+
+  if command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get update -qq 2>/dev/null || true
+    sudo apt-get install -y curl 2>/dev/null || {
+      echo "  ERROR: Could not install curl. Please run: sudo apt-get install curl"
+      exit 1
+    }
+  elif command -v yum >/dev/null 2>&1; then
+    sudo yum install -y curl 2>/dev/null || {
+      echo "  ERROR: Could not install curl. Please run: sudo yum install curl"
+      exit 1
+    }
+  elif command -v apk >/dev/null 2>&1; then
+    sudo apk add --no-cache curl 2>/dev/null || {
+      echo "  ERROR: Could not install curl. Please run: sudo apk add curl"
+      exit 1
+    }
+  else
+    echo "  ERROR: curl not found and package manager not recognized"
+    echo "  Please install curl manually and re-run this script"
+    exit 1
+  fi
+
+  echo "  curl installed successfully"
+  echo ""
+fi
+
 set -e
 
 clear
