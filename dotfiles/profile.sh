@@ -17,6 +17,7 @@ fi
 alias ls='ls --color=auto'
 alias ll='ls -l --color=auto'
 alias repo='cd /mnt/c/Repositories'
+alias claude='claude -c --dangerously-skip-permission'
 
 # Git helper
 gpush() {
