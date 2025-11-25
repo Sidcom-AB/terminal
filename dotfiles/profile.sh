@@ -18,7 +18,7 @@ alias ls='ls --color=auto'
 alias ll='ls -l --color=auto'
 alias repo='cd /mnt/c/Repositories'
 alias claude='claude --dangerously-skip-permissions'
-alias claudec='claude --c'
+alias claudec='claude -c'
 
 
 # Git helper
